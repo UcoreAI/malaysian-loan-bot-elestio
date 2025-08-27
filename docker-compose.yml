@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: malaysian_loan_ai
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${MASTER_DB_PASSWORD}
+      POSTGRES_PASSWORD: ${MASTER_DB_PASSWORD:-defaultpass123}
       # Memory optimizations for 2GB VPS
       POSTGRES_SHARED_BUFFERS: 64MB
       POSTGRES_EFFECTIVE_CACHE_SIZE: 128MB
@@ -15,7 +15,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db-minimal.sql:/docker-entrypoint-initdb.d/init-db.sql
-      - ./postgresql.minimal.conf:/etc/postgresql/postgresql.conf
     restart: unless-stopped
     deploy:
       resources:
@@ -48,33 +47,33 @@ services:
       retries: 2
 
   # Malaysian Loan Bot (Main Application)
-  malaysian-loan-bot:
+  app:
     build:
       context: .
       dockerfile: Dockerfile.optimized
     container_name: malaysian_loan_bot
     environment:
-      CLIENT_ID: client_001
+      CLIENT_ID: ${CLIENT_ID:-client_001}
       CLIENT_NAME: "Malaysian Loan Consultant"
       POSTGRES_HOST: postgres
       POSTGRES_DB: malaysian_loan_ai
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${MASTER_DB_PASSWORD}
+      POSTGRES_PASSWORD: ${MASTER_DB_PASSWORD:-defaultpass123}
       REDIS_HOST: redis
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       WHATSAPP_TOKEN: ${MALAYSIAN_LOAN_WHATSAPP_TOKEN}
-      # External CRM/ERP connections (your existing infrastructure)
-      EXTERNAL_CHATWOOT_URL: ${EXTERNAL_CHATWOOT_URL}
-      EXTERNAL_CHATWOOT_TOKEN: ${EXTERNAL_CHATWOOT_TOKEN}
-      EXTERNAL_ERP_URL: ${EXTERNAL_ERP_URL}
-      EXTERNAL_ERP_TOKEN: ${EXTERNAL_ERP_TOKEN}
+      # External CRM/ERP connections
+      EXTERNAL_CHATWOOT_URL: ${EXTERNAL_CHATWOOT_URL:-http://localhost}
+      EXTERNAL_CHATWOOT_TOKEN: ${EXTERNAL_CHATWOOT_TOKEN:-none}
+      EXTERNAL_ERP_URL: ${EXTERNAL_ERP_URL:-http://localhost}
+      EXTERNAL_ERP_TOKEN: ${EXTERNAL_ERP_TOKEN:-none}
       # Memory optimizations
       PYTHON_MEMORY_LIMIT: 1000m
       RAG_BATCH_SIZE: 10
       MAX_CONVERSATION_HISTORY: 20
       WEBHOOK_PORT: 8080
     ports:
-      - "3000:8080"  # Elestio expects port 3000
+      - "172.17.0.1:3000:8080"  # Bind specifically to Docker bridge IP
     depends_on:
       - postgres
       - redis
@@ -82,8 +81,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1200m  # Tight memory limit
-          cpus: '1.5'    # Most CPU for AI processing
+          memory: 1200m
+          cpus: '1.5'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 60s

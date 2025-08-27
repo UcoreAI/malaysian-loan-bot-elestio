@@ -1,0 +1,41 @@
+ports:
+  - protocol: "HTTPS"
+    targetProtocol: "HTTP"
+    targetPort: "3000"
+    targetIP: "172.17.0.1"
+    public: true
+
+config:
+  runTime: "dockerCompose"
+  version: ""
+  framework: ""
+  buildCommand: "docker-compose build"
+  buildDir: "/"
+  runCommand: "docker-compose up -d"
+  icon: ""
+  screenshot: ""
+
+lifeCycleConfig:
+  preInstallCommand: ""
+  postInstallCommand: ""
+  preBackupCommand: ""
+  postBackupCommand: ""
+  preRestoreCommand: ""
+  postRestoreCommand: ""
+  postDeployCommand: ""
+
+webUI:
+  - url: "https://[CI_CD_DOMAIN]"
+    label: "Malaysian Loan Bot"
+  - url: "https://[CI_CD_DOMAIN]/health"
+    label: "Health Check"
+
+environments:
+  - key: "MASTER_DB_PASSWORD"
+    value: "random_password"
+  - key: "OPENAI_API_KEY"
+    value: ""
+  - key: "MALAYSIAN_LOAN_WHATSAPP_TOKEN"
+    value: ""
+  - key: "CLIENT_ID"
+    value: "client_001"
