@@ -1,5 +1,5 @@
 # Essential dependencies for Malaysian Loan Bot on Elestio (2GB VPS)
-# Optimized for minimal memory footprint
+# Simplified to avoid compilation issues
 
 # Core web framework and HTTP
 requests==2.31.0
@@ -9,18 +9,8 @@ flask==2.3.3
 psycopg2-binary==2.9.7
 redis==4.6.0
 
-# OpenAI API
+# OpenAI API (older stable version)
 openai==0.28.1
-
-# Basic RAG dependencies (minimal versions)
-langchain==0.0.340
-faiss-cpu==1.7.4
-tiktoken==0.5.1
-numpy==1.24.3
-
-# Text processing (essential only)
-sentence-transformers==2.2.2
-pypdf2==3.0.1
 
 # Environment and configuration
 python-dotenv==1.0.0

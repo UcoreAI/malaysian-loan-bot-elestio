@@ -1,12 +1,16 @@
 FROM python:3.11-alpine
 
-# Install minimal system dependencies
+# Install system dependencies including build tools
 RUN apk add --no-cache \
     gcc \
+    g++ \
     musl-dev \
     postgresql-dev \
     libffi-dev \
     curl \
+    openblas-dev \
+    lapack-dev \
+    gfortran \
     && rm -rf /var/cache/apk/*
 
 # Set working directory

@@ -1,56 +1,20 @@
 #!/usr/bin/env python3
 """
-Simple RAG System for Malaysian Loan Bot
-Streamlined for Elestio deployment
+Simplified RAG System Stub for Malaysian Loan Bot
+(Minimal implementation to avoid dependency issues)
 """
 
-import os
-import json
-import numpy as np
-from typing import List, Dict, Optional
-import openai
-from sentence_transformers import SentenceTransformer
-
 class SimpleLoanRAG:
-    """Simple RAG system for loan consultation knowledge"""
+    """Simplified RAG system without heavy dependencies"""
     
     def __init__(self, knowledge_base_path: str = "/app/knowledge_base"):
         self.knowledge_base_path = knowledge_base_path
-        self.documents = []
-        self.embeddings = []
-        self.embedding_model = None
-        
-        # Initialize embedding model
-        self.init_embedding_model()
-        
-        # Load knowledge base
-        self.load_knowledge_base()
-        
-    def init_embedding_model(self):
-        """Initialize sentence transformer model"""
-        try:
-            # Use lightweight model for 2GB constraint
-            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-            print("✅ RAG embedding model loaded")
-        except Exception as e:
-            print(f"❌ RAG model loading error: {e}")
+        self.documents = self.get_default_knowledge()
+        print("✅ Simple knowledge base initialized")
     
-    def load_knowledge_base(self):
-        """Load existing knowledge base or create default"""
-        try:
-            if os.path.exists(self.knowledge_base_path):
-                self.load_documents_from_directory()
-            else:
-                self.create_default_knowledge()
-                
-            print(f"✅ Knowledge base loaded: {len(self.documents)} documents")
-            
-        except Exception as e:
-            print(f"❌ Knowledge base loading error: {e}")
-    
-    def create_default_knowledge(self):
-        """Create default Malaysian loan knowledge"""
-        default_docs = [
+    def get_default_knowledge(self):
+        """Return default Malaysian loan knowledge"""
+        return [
             {
                 "title": "Personal Loan Eligibility",
                 "content": "Malaysian personal loan eligibility requires: minimum age 18-21, maximum age 55-65, minimum monthly income RM2,000-3,000, employment period minimum 6 months, CTOS score above 600, debt service ratio below 60%."
@@ -72,134 +36,65 @@ class SimpleLoanRAG:
                 "content": "Standard loan documents: IC copy front/back, latest 3 months salary slip, latest 6 months bank statement, EPF statement, employment letter, CTOS report. Additional for housing: property documents, valuation report."
             }
         ]
-        
-        self.documents = default_docs
-        self.generate_embeddings()
     
-    def load_documents_from_directory(self):
-        """Load documents from knowledge base directory"""
-        self.documents = []
+    def search_knowledge(self, query: str, top_k: int = 3):
+        """Simple keyword search without embeddings"""
+        query_lower = query.lower()
+        results = []
         
-        for filename in os.listdir(self.knowledge_base_path):
-            if filename.endswith('.json'):
-                file_path = os.path.join(self.knowledge_base_path, filename)
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        doc = json.load(f)
-                        self.documents.append(doc)
-                except Exception as e:
-                    print(f"❌ Error loading {filename}: {e}")
+        for doc in self.documents:
+            # Simple keyword matching
+            content_lower = (doc['title'] + ' ' + doc['content']).lower()
+            if any(word in content_lower for word in query_lower.split()):
+                results.append({
+                    "document": doc,
+                    "similarity": 0.5  # Fixed similarity score
+                })
         
-        if self.documents:
-            self.generate_embeddings()
-    
-    def generate_embeddings(self):
-        """Generate embeddings for all documents"""
-        if not self.embedding_model or not self.documents:
-            return
-            
-        try:
-            # Combine title and content for embedding
-            texts = [f"{doc['title']}: {doc['content']}" for doc in self.documents]
-            
-            # Generate embeddings
-            self.embeddings = self.embedding_model.encode(texts, convert_to_numpy=True)
-            print(f"✅ Generated embeddings for {len(texts)} documents")
-            
-        except Exception as e:
-            print(f"❌ Embedding generation error: {e}")
-    
-    def search_knowledge(self, query: str, top_k: int = 3) -> List[Dict]:
-        """Search knowledge base using semantic similarity"""
-        if not self.embedding_model or not self.embeddings or not query.strip():
-            return []
-        
-        try:
-            # Generate query embedding
-            query_embedding = self.embedding_model.encode([query], convert_to_numpy=True)
-            
-            # Calculate similarities
-            similarities = np.dot(self.embeddings, query_embedding.T).flatten()
-            
-            # Get top matches
-            top_indices = np.argsort(similarities)[-top_k:][::-1]
-            
-            results = []
-            for idx in top_indices:
-                if similarities[idx] > 0.3:  # Minimum similarity threshold
-                    results.append({
-                        "document": self.documents[idx],
-                        "similarity": float(similarities[idx])
-                    })
-            
-            return results
-            
-        except Exception as e:
-            print(f"❌ Knowledge search error: {e}")
-            return []
+        return results[:top_k]
     
     def get_relevant_context(self, query: str) -> str:
         """Get relevant context for a query"""
-        try:
-            results = self.search_knowledge(query, top_k=2)
-            
-            if not results:
-                return "No specific information found in knowledge base."
-            
-            context_parts = []
-            for result in results:
-                doc = result["document"]
-                context_parts.append(f"{doc['title']}: {doc['content']}")
-            
-            return "\\n\\n".join(context_parts)
-            
-        except Exception as e:
-            print(f"❌ Context retrieval error: {e}")
-            return "Error retrieving relevant information."
+        results = self.search_knowledge(query, top_k=2)
+        
+        if not results:
+            return "No specific information found in knowledge base."
+        
+        context_parts = []
+        for result in results:
+            doc = result["document"]
+            context_parts.append(f"{doc['title']}: {doc['content']}")
+        
+        return "\n\n".join(context_parts)
     
     def enhance_response_with_knowledge(self, query: str, base_response: str) -> str:
         """Enhance response with relevant knowledge"""
-        try:
-            relevant_context = self.get_relevant_context(query)
-            
-            if "No specific information" in relevant_context:
-                return base_response
-            
-            # Simple enhancement - add relevant info if not already covered
-            enhanced_response = base_response
-            
-            # Add knowledge if response seems incomplete
-            if len(base_response.split()) < 50:  # Short response
-                enhanced_response += f"\\n\\nAdditional information:\\n{relevant_context}"
-            
-            return enhanced_response
-            
-        except Exception as e:
-            print(f"❌ Response enhancement error: {e}")
+        relevant_context = self.get_relevant_context(query)
+        
+        if "No specific information" in relevant_context:
             return base_response
+        
+        # Simple enhancement
+        enhanced_response = base_response
+        if len(base_response.split()) < 50:
+            enhanced_response += f"\n\nAdditional information:\n{relevant_context}"
+        
+        return enhanced_response
 
 class LoanRAGPresets:
     """Preset knowledge for Malaysian loan consultation"""
     
     @staticmethod
-    def get_malaysian_loan_knowledge() -> List[Dict]:
+    def get_malaysian_loan_knowledge():
         """Get comprehensive Malaysian loan knowledge"""
         return [
             {
                 "title": "Bank Negara Malaysia Guidelines",
-                "content": "BNM sets maximum debt service ratio at 60% for personal loans, 70% for housing loans. Cooling-off period 5 days for personal loans. Banks must conduct affordability assessment."
+                "content": "BNM sets maximum debt service ratio at 60% for personal loans, 70% for housing loans. Cooling-off period 5 days for personal loans."
             },
             {
                 "title": "Popular Malaysian Banks",
-                "content": "Major banks: Maybank, CIMB, Public Bank, RHB, Hong Leong Bank, AmBank, Bank Islam, Bank Rakyat. Each has different eligibility criteria and interest rates."
-            },
-            {
-                "title": "Loan Interest Rates",
-                "content": "Current Malaysian rates (approximate): Personal loans 6-18%, Housing loans 3.5-4.5%, Car loans 2.5-4%. Rates vary by bank, loan amount, and credit score."
-            },
-            {
-                "title": "Government Loan Schemes",
-                "content": "PR1MA housing scheme, My First Home Scheme, Fund for Food scheme. Special rates and terms for first-time buyers and specific groups."
+                "content": "Major banks: Maybank, CIMB, Public Bank, RHB, Hong Leong Bank, AmBank, Bank Islam, Bank Rakyat."
             }
         ]
 
