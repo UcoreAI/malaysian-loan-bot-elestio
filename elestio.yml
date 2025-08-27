@@ -1,8 +1,8 @@
 ports:
   - protocol: "HTTPS"
     targetProtocol: "HTTP"
-    targetPort: "3000"
-    targetIP: "172.17.0.1"
+    targetPort: "8080"
+    targetIP: "app_main"
     public: true
 
 config:
