@@ -3,7 +3,7 @@ services:
   # PostgreSQL Database (Minimal Configuration)
   postgres:
     image: postgres:15-alpine
-    container_name: postgres_malaysian_loan
+    container_name: postgres_main
     environment:
       POSTGRES_DB: malaysian_loan_ai
       POSTGRES_USER: postgres
@@ -30,7 +30,7 @@ services:
   # Redis Cache (Minimal Configuration)
   redis:
     image: redis:7-alpine
-    container_name: redis_malaysian_loan
+    container_name: redis_main
     command: redis-server --maxmemory 40mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
@@ -51,7 +51,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.optimized
-    container_name: malaysian_loan_bot
+    container_name: app_main
     environment:
       CLIENT_ID: ${CLIENT_ID:-client_001}
       CLIENT_NAME: "Malaysian Loan Consultant"
@@ -73,7 +73,7 @@ services:
       MAX_CONVERSATION_HISTORY: 20
       WEBHOOK_PORT: 8080
     ports:
-      - "172.17.0.1:3000:8080"  # Bind specifically to Docker bridge IP
+      - "3000:8080"
     depends_on:
       - postgres
       - redis

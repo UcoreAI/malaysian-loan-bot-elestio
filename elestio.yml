@@ -22,6 +22,7 @@ lifeCycleConfig:
   postBackupCommand: ""
   preRestoreCommand: ""
   postRestoreCommand: ""
+  preDeployCommand: "bash ./scripts/preDeployCommand.sh"
   postDeployCommand: ""
 
 webUI:
