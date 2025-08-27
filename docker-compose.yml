@@ -47,7 +47,7 @@ services:
       timeout: 5s
       retries: 2
 
-  # Malaysian Loan Bot (Optimized for 2GB)
+  # Malaysian Loan Bot (Main Application)
   malaysian-loan-bot:
     build:
       context: .
@@ -74,7 +74,7 @@ services:
       MAX_CONVERSATION_HISTORY: 20
       WEBHOOK_PORT: 8080
     ports:
-      - "8080:8080"
+      - "3000:8080"  # Elestio expects port 3000
     depends_on:
       - postgres
       - redis
@@ -89,23 +89,6 @@ services:
       interval: 60s
       timeout: 10s
       retries: 3
-
-  # Nginx (Lightweight)
-  nginx:
-    image: nginx:alpine
-    container_name: nginx_elestio
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.elestio.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - malaysian-loan-bot
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 15m
-          cpus: '0.05'
 
 volumes:
   postgres_data:
