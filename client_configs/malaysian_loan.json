@@ -1,0 +1,59 @@
+{
+  "client_id": "client_001",
+  "business_name": "Malaysian Loan Consultant AI",
+  "business_type": "loan_consultant",
+  "languages": {
+    "primary": "english",
+    "supported": ["english", "bahasa_malaysia", "chinese", "manglish"]
+  },
+  "ai_configuration": {
+    "model": "gpt-4o",
+    "temperature": 0.7,
+    "max_tokens": 1000,
+    "system_prompt_template": "malaysian_loan_consultant"
+  },
+  "workflows": {
+    "loan_qualification": {
+      "required_documents": [
+        "bank_statement",
+        "ctos_report", 
+        "salary_slip",
+        "ic_copy"
+      ],
+      "escalation_triggers": [
+        "ctos_purchase_request",
+        "complex_loan_scenario",
+        "document_verification_needed"
+      ],
+      "escalation_number": "+60189168828"
+    }
+  },
+  "integrations": {
+    "whatsapp": {
+      "api_url": "https://gate.whapi.cloud/messages/text",
+      "media_url": "https://gate.whapi.cloud/files",
+      "token": "${CLIENT_001_WHATSAPP_TOKEN}",
+      "channel_id": "${CLIENT_001_WHATSAPP_CHANNEL}"
+    },
+    "database": {
+      "schema": "client_001",
+      "retention_days": 365
+    },
+    "external_apis": {
+      "ctos_enabled": true,
+      "ctos_cost_rm": 25,
+      "openai_api_key": "${OPENAI_API_KEY}"
+    }
+  },
+  "resource_limits": {
+    "max_concurrent_conversations": 50,
+    "max_daily_requests": 10000,
+    "max_file_upload_mb": 10
+  },
+  "business_rules": {
+    "operating_hours": "24/7",
+    "response_time_target_ms": 2000,
+    "auto_escalation_delay_minutes": 30,
+    "ctos_auto_purchase": false
+  }
+}

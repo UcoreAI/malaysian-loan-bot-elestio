@@ -1,0 +1,52 @@
+FROM python:3.11-alpine
+
+# Install minimal system dependencies
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    postgresql-dev \
+    libffi-dev \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY requirements_elestio.txt ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements_elestio.txt && \
+    pip cache purge
+
+# Copy application code
+COPY enhanced_bot_with_rag.py .
+COPY simple_rag_system.py .
+COPY database_setup.py .
+COPY health_check.py .
+COPY client_configs/ ./client_configs/
+
+# Create necessary directories
+RUN mkdir -p /logs /knowledge_bases /app/data && \
+    chmod 755 /logs /knowledge_bases /app/data
+
+# Create non-root user for security
+RUN adduser -D -s /bin/sh appuser && \
+    chown -R appuser:appuser /app /logs /knowledge_bases
+USER appuser
+
+# Environment optimizations for 2GB VPS
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONHASHSEED=0
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV RAG_ENABLED=true
+
+# Health check
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=2 \
+    CMD python health_check.py || exit 1
+
+# Expose port
+EXPOSE 8080
+
+# Run the application
+CMD ["python", "enhanced_bot_with_rag.py"]
