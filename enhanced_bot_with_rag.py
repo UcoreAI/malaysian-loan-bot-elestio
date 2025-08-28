@@ -8,11 +8,11 @@ print(f"WhatsApp Token: {'SET' if os.getenv('MALAYSIAN_LOAN_WHATSAPP_TOKEN') els
 print(f"OpenAI Key: {'SET' if os.getenv('OPENAI_API_KEY') else 'MISSING'}")
 
 class DiagnosticBot:
-def __init__(self):
+  def __init__(self):
           self.whatsapp_token = os.getenv('MALAYSIAN_LOAN_WHATSAPP_TOKEN')
           self.openai_key = os.getenv('OPENAI_API_KEY')
 
-def process_webhook(self, webhook_data):
+  def process_webhook(self, webhook_data):
           print("WEBHOOK RECEIVED:")
           print(json.dumps(webhook_data, indent=2))
           try:
@@ -38,8 +38,8 @@ def process_webhook(self, webhook_data):
   bot = DiagnosticBot()
 
   class WebhookHandler(BaseHTTPRequestHandler):
-  def do_POST(self):
-  if self.path in ['/webhook', '/client/001/webhook']:
+    def do_POST(self):
+              if self.path in ['/webhook', '/client/001/webhook']:
               length = int(self.headers['Content-Length'])
               data = json.loads(self.rfile.read(length))
               result = bot.process_webhook(data)
@@ -47,18 +47,18 @@ def process_webhook(self, webhook_data):
               self.send_header('Content-type', 'application/json')
               self.end_headers()
               self.wfile.write(json.dumps(result).encode())
-  else:
+    else:
               self.send_response(404)
               self.end_headers()
 
-  def do_GET(self):
-  if self.path == '/health':
+    def do_GET(self):
+              if self.path == '/health':
               health = {"status": "diagnostic", "token": bool(bot.whatsapp_token)}
               self.send_response(200)
               self.send_header('Content-type', 'application/json')
               self.end_headers()
               self.wfile.write(json.dumps(health).encode())
-  else:
+    else:
               self.send_response(200)
               self.send_header('Content-type', 'text/html')
               self.end_headers()
