@@ -64,38 +64,48 @@ class ElestioLoanBot:
             self.redis_client = None
     
     def process_webhook(self, webhook_data):
-      """Process incoming WhatsApp webhook"""
-      try:
-          messages = webhook_data.get('messages', [])
-          if not messages:
-              return {"status": "no_message"}
+          """Process incoming WhatsApp webhook"""
+          try:
+              messages = webhook_data.get('messages', [])
+              if not messages:
+                  return {"status": "no_message"}
 
-          message = messages[0]
+              message = messages[0]
 
-          # Skip our own messages
-          if message.get('from_me', False):
-              return {"status": "ignored"}
+              # Skip our own messages
+              if message.get('from_me', False):
+                  return {"status": "ignored"}
 
-          phone_number = message.get('from', '')
+              phone_number = message.get('from', '')
 
-          # Get text from message (Whapi format)
-          message_text = message.get('body', '')
+              # Get text from message (Whapi format)
+              message_text = message.get('body', '')
+              if not message_text:
+                  # Try getting from text field
+                  text_data = message.get('text', {})
+                  message_text = text_data.get('body', '')
 
-          if message_text and phone_number:
-              # Save conversation to database
-              self.save_conversation(phone_number, message_text)
+              if message_text and phone_number:
+                  print(f"📥 Received: '{message_text}' from {phone_number}")
 
-              # Generate AI response
-              response = self.generate_response(phone_number, message_text)
+                  # Save conversation to database
+                  self.save_conversation(phone_number, message_text)
 
-              # Send response via WhatsApp
-              self.send_whatsapp_message(phone_number, response)
+                  # Generate AI response
+                  response = self.generate_response(phone_number, message_text)
+                  print(f"🤖 Generated response: {response[:100]}...")
 
-              return {"status": "processed", "response": response}
+                  # Send response via WhatsApp
+                  sent = self.send_whatsapp_message(phone_number, response)
+                  print(f"📤 Message sent: {sent}")
 
-      except Exception as e:    # ← FIXED: Aligned with try
-          print(f"❌ Webhook processing error: {e}")
-          return {"status": "error", "error": str(e)}
+                  return {"status": "processed", "response": response}
+              else:
+                  return {"status": "no_valid_message"}
+
+          except Exception as e:
+              print(f"❌ Webhook processing error: {e}")
+              return {"status": "error", "error": str(e)}
     
     def save_conversation(self, phone_number, message_text):
         """Save conversation to database"""
@@ -226,38 +236,43 @@ IMPORTANT RULES:
 Respond professionally and helpfully to loan-related inquiries."""
 
     def send_whatsapp_message(self, phone_number, message):
-        """Send message via WhatsApp API"""
-        try:
-            if not self.whatsapp_token:
-                print("⚠️ WhatsApp token not configured")
-                return False
-                
-            headers = {
-                "Authorization": f"Bearer {self.whatsapp_token}",
-                "Content-Type": "application/json"
-            }
-            
-            # Add @s.whatsapp.net to phone number
+          """Send message via WhatsApp API"""
+          try:
+              if not self.whatsapp_token:
+                  print("⚠️ WhatsApp token not configured")
+                  return False
+
+              headers = {
+                  "Authorization": f"Bearer {self.whatsapp_token}",
+                  "Content-Type": "application/json"
+              }
+
+              # Add @s.whatsapp.net to phone number
               if not phone_number.endswith('@s.whatsapp.net'):
                   phone_number = f"{phone_number}@s.whatsapp.net"
 
               data = {
                   "to": phone_number,
-                  "body": message
+                  "body": message,
+                  "typing_time": 3
               }
-            
-            response = requests.post(
-                "https://gate.whapi.cloud/messages/text",
-                headers=headers,
-                json=data,
-                timeout=10
-            )
-            
-            return response.status_code == 200
-            
-        except Exception as e:
-            print(f"⚠️ WhatsApp send error: {e}")
-            return False
+
+              print(f"📱 Sending to Whapi: {phone_number}")
+
+              response = requests.post(
+                  "https://gate.whapi.cloud/messages/text",
+                  headers=headers,
+                  json=data,
+                  timeout=10
+              )
+
+              print(f"📡 Whapi response: {response.status_code} - {response.text[:200]}")
+
+              return response.status_code == 200 or response.status_code == 201
+
+          except Exception as e:
+              print(f"⚠️ WhatsApp send error: {e}")
+              return False
 
 class WebhookHandler(BaseHTTPRequestHandler):
     """HTTP handler for WhatsApp webhooks"""
