@@ -92,10 +92,10 @@ class ElestioLoanBot:
               self.send_whatsapp_message(phone_number, response)
 
               return {"status": "processed", "response": response}
-                
-        except Exception as e:
-            print(f"❌ Webhook processing error: {e}")
-            return {"status": "error", "error": str(e)}
+
+      except Exception as e:    # ← FIXED: Aligned with try
+          print(f"❌ Webhook processing error: {e}")
+          return {"status": "error", "error": str(e)}
     
     def save_conversation(self, phone_number, message_text):
         """Save conversation to database"""
@@ -238,13 +238,13 @@ Respond professionally and helpfully to loan-related inquiries."""
             }
             
             # Add @s.whatsapp.net to phone number
-  if not phone_number.endswith('@s.whatsapp.net'):
-      phone_number = f"{phone_number}@s.whatsapp.net"
+              if not phone_number.endswith('@s.whatsapp.net'):
+                  phone_number = f"{phone_number}@s.whatsapp.net"
 
-  data = {
-      "to": phone_number,
-      "body": message
-  }
+              data = {
+                  "to": phone_number,
+                  "body": message
+              }
             
             response = requests.post(
                 "https://gate.whapi.cloud/messages/text",
