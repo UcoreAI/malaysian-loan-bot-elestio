@@ -25,7 +25,7 @@ class ElestioLoanBot:
         # Configuration from environment
         self.client_id = os.getenv('CLIENT_ID', 'client_001')
         self.openai_api_key = os.getenv('OPENAI_API_KEY')
-        self.whatsapp_token = os.getenv('WHATSAPP_TOKEN')
+        self.whatsapp_token = os.getenv('MALAYSIAN_LOAN_WHATSAPP_TOKEN')
         
         # Database configuration
         self.db_config = {
@@ -64,23 +64,34 @@ class ElestioLoanBot:
             self.redis_client = None
     
     def process_webhook(self, webhook_data):
-        """Process incoming WhatsApp webhook"""
-        try:
-            message = webhook_data.get('messages', [{}])[0]
-            phone_number = message.get('from', '')
-            message_text = message.get('text', {}).get('body', '')
-            
-            if message_text and phone_number:
-                # Save conversation to database
-                self.save_conversation(phone_number, message_text)
-                
-                # Generate AI response
-                response = self.generate_response(phone_number, message_text)
-                
-                # Send response via WhatsApp
-                self.send_whatsapp_message(phone_number, response)
-                
-                return {"status": "processed", "response": response}
+      """Process incoming WhatsApp webhook"""
+      try:
+          messages = webhook_data.get('messages', [])
+          if not messages:
+              return {"status": "no_message"}
+
+          message = messages[0]
+
+          # Skip our own messages
+          if message.get('from_me', False):
+              return {"status": "ignored"}
+
+          phone_number = message.get('from', '')
+
+          # Get text from message (Whapi format)
+          message_text = message.get('body', '')
+
+          if message_text and phone_number:
+              # Save conversation to database
+              self.save_conversation(phone_number, message_text)
+
+              # Generate AI response
+              response = self.generate_response(phone_number, message_text)
+
+              # Send response via WhatsApp
+              self.send_whatsapp_message(phone_number, response)
+
+              return {"status": "processed", "response": response}
                 
         except Exception as e:
             print(f"❌ Webhook processing error: {e}")
@@ -226,10 +237,14 @@ Respond professionally and helpfully to loan-related inquiries."""
                 "Content-Type": "application/json"
             }
             
-            data = {
-                "to": phone_number,
-                "body": message
-            }
+            # Add @s.whatsapp.net to phone number
+  if not phone_number.endswith('@s.whatsapp.net'):
+      phone_number = f"{phone_number}@s.whatsapp.net"
+
+  data = {
+      "to": phone_number,
+      "body": message
+  }
             
             response = requests.post(
                 "https://gate.whapi.cloud/messages/text",
