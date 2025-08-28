@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-  import json
-  import os
-  from http.server import HTTPServer, BaseHTTPRequestHandler
+import json
+import os
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
   print("DIAGNOSTIC BOT STARTING")
   print(f"WhatsApp Token: {'SET' if os.getenv('MALAYSIAN_LOAN_WHATSAPP_TOKEN') else 'MISSING'}")
